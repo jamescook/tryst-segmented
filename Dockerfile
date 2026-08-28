@@ -1,13 +1,7 @@
-# Dev/test image for tryst-segmented - filled in from
-# /Dockerfile.widget-template (see that file before copying this
-# pattern to another widget shard rather than copying this file
-# directly). Built from the REPO ROOT as context, not from this
-# directory - this shard depends on both tryst and tryst-vector through
-# `path:` dependencies (see shard.yml, and its own comment on why this
-# shard lives at the repo root rather than nested under a widgets/
-# directory - a real `shards install` limitation, confirmed directly,
-# not a style choice), so the repo root and tryst-vector/ both have to
-# be inside the build context.
+# Dev/test image for tryst-segmented. Built from this repo's own root as
+# context - both tryst and tryst-vector are `github:` shard dependencies
+# (their own repos), so `shards install` fetches them directly rather
+# than needing them copied into the build context.
 #
 # Debian forky for the same reason tryst-vector/Dockerfile is: it's the
 # first Debian release carrying libthorvg-dev, which this shard also
@@ -25,7 +19,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     tcl-dev tk-dev \
     libthorvg-dev \
     xvfb xauth \
-    ca-certificates curl gcc pkg-config \
+    ca-certificates curl git gcc pkg-config \
     libpcre2-dev libgc-dev libevent-dev libssl-dev zlib1g-dev libyaml-dev libxml2-dev \
     && rm -rf /var/lib/apt/lists/*
 
@@ -40,22 +34,10 @@ RUN set -eux; \
     ln -s /opt/crystal/bin/shards /usr/local/bin/shards; \
     crystal --version
 
-# Both path-dependency shards, laid out exactly as they are in the repo
-# so `path:` resolves the same way it does on a developer's machine.
-# Copied file by file rather than as whole directories - same reasoning
-# as tryst-vector/Dockerfile's own copy of the parent shard.
 WORKDIR /app
 COPY shard.yml ./
 COPY src/ src/
-
-WORKDIR /app/tryst-vector
-COPY tryst-vector/shard.yml ./
-COPY tryst-vector/src/ src/
-
-WORKDIR /app/tryst-segmented
-COPY tryst-segmented/shard.yml ./
-COPY tryst-segmented/src/ src/
-COPY tryst-segmented/spec/ spec/
+COPY spec/ spec/
 
 RUN shards install
 

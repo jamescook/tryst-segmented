@@ -1,10 +1,10 @@
 # tryst-segmented
 
-An iOS/web-style segmented control for [tryst](../), Crystal's Tcl/Tk
+An iOS/web-style segmented control for [tryst](https://github.com/jamescook/tryst), Crystal's Tcl/Tk
 binding — a rounded pill of mutually exclusive text options with a
 sliding highlight, in place of a row of ttk radio buttons. Built on
 `Tryst::OwnerDrawnWidget` and rendered through
-[tryst-vector](../tryst-vector/).
+[tryst-vector](https://github.com/jamescook/tryst-vector).
 
 ```crystal
 require "tryst"
@@ -54,7 +54,7 @@ Left/Right (clamped at either end, skipping any disabled segments).
 
 There's no `ui.segmented`/DSL `bind:` — like `Switch` and
 `ValueSlider`, this lives at the App layer, not as a registered
-`WidgetType` (see [CUSTOM_WIDGETS.md](../CUSTOM_WIDGETS.md)). Wire a
+`WidgetType` (see [CUSTOM_WIDGETS.md](https://github.com/jamescook/tryst/blob/main/CUSTOM_WIDGETS.md)). Wire a
 `Tryst::UI::Var` manually:
 
 ```crystal
@@ -65,15 +65,11 @@ var.on_change { |v| control.selected = v }
 ## Requirements
 
 Whatever tryst and tryst-vector need — Crystal >= 1.21.0, Tcl/Tk 8.6,
-and ThorVG >= 1.0 (see [tryst-vector's own README](../tryst-vector/)).
+and ThorVG >= 1.0 (see [tryst-vector's own README](https://github.com/jamescook/tryst-vector)).
 
 ## Examples
 
-Run this **from this directory**, not the repo root — `require
-"tryst"` resolves against the `lib/` of wherever crystal runs.
-
 ```
-cd tryst-segmented
 crystal run examples/segmented_control_demo.cr
 ```
 
@@ -85,7 +81,7 @@ crystal spec                    # host
 scripts/docker-test.sh          # Debian forky, same suite
 ```
 
-`scripts/docker-test.sh` builds from the repo root, since the `path:
-../` dependencies on tryst and tryst-vector have to be inside the
-build context; it takes the same arguments `crystal spec` does, so a
-focused run works there too.
+`scripts/docker-test.sh` builds from this repo's own root; `shards
+install` inside the image fetches tryst and tryst-vector directly via
+their `github:` dependencies. It takes the same arguments `crystal
+spec` does, so a focused run works there too.
