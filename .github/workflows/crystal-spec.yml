@@ -55,6 +55,8 @@ jobs:
           tags: tryst-segmented-test:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          build-args: |
+            CACHEBUST=${{ github.run_id }}
 
       - name: Run crystal spec
         run: docker run --rm --init tryst-segmented-test:latest

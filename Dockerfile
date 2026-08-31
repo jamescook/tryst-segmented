@@ -39,6 +39,15 @@ COPY shard.yml ./
 COPY src/ src/
 COPY spec/ spec/
 
+# Docker's cache key for this layer is shard.yml's own content, not
+# what's actually at the github: refs it resolves - a persistent Docker
+# daemon (a long-running local dev daemon, or a self-hosted CI runner)
+# would otherwise keep reusing whatever tryst/tryst-vector/ameba commit
+# got fetched the FIRST time this layer ever ran, no matter how many
+# times the actual dependency changed afterward. CACHEBUST forces this
+# layer (only this one - everything above it still caches normally) to
+# always re-resolve.
+ARG CACHEBUST=1
 RUN shards install
 
 CMD ["xvfb-run", "-a", "crystal", "spec"]
