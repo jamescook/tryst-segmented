@@ -77,14 +77,27 @@ module Tryst
     @surface : Vector::Surface?
     @on_action_callbacks : Array(String -> Nil)
 
+    # Whether a programmatic #selected= animates - see #initialize.
+    getter? animate_set : Bool
+
     # options must be non-empty and non-duplicate (a duplicate would make
     # #selected=/#disable_segment's own String-keyed API ambiguous).
     # accent/disabled_dim follow the same convention as Switch/
     # ValueSlider. height sizes the pill only - segment width always
     # comes from each option's own measured text, never from height.
+    #
+    # animate_set: whether a PROGRAMMATIC #selected= slides the highlight
+    # (default) or jumps straight to the new segment. A user selection
+    # always animates either way - this knob only covers the
+    # Crystal-driven side of the same split #selected= already draws, and
+    # matches Switch's own animate_set:. Pass false for a control whose
+    # selection gets pushed in from saved state: an app populating a
+    # settings panel during startup otherwise arms one 16ms tween per
+    # control, animating a window nobody is looking at yet.
     def initialize(app : App, options : Array(String), selected : String? = nil,
                    accent : String? = nil, disabled_dim : Float64 = 0.45,
-                   font : String = "TkDefaultFont", height : Int32 = 32, parent = nil)
+                   font : String = "TkDefaultFont", height : Int32 = 32,
+                   @animate_set : Bool = true, parent = nil)
       raise ArgumentError.new("options must not be empty") if options.empty?
       raise ArgumentError.new("options must not contain duplicates, got #{options.inspect}") \
         if options.uniq.size != options.size
@@ -152,10 +165,11 @@ module Tryst
     end
 
     # Sets the selection programmatically - animates the same as a user
-    # selection, but never fires #on_action (same "user action vs
-    # Crystal-driven set" split every other stateful widget in this
-    # codebase draws). Raises ArgumentError if value isn't one of
-    # #options.
+    # selection unless the control was built with animate_set: false, in
+    # which case the highlight jumps straight to the new segment. Never
+    # fires #on_action either way (same "user action vs Crystal-driven
+    # set" split every other stateful widget in this codebase draws).
+    # Raises ArgumentError if value isn't one of #options.
     def selected=(value : String) : String
       set_selected_index(segment_index!(value), notify: false)
       selected
@@ -277,9 +291,18 @@ module Tryst
       @highlight_tween.try(&.cancel)
       from_x = @highlight_x
       from_w = @highlight_w
-      @highlight_tween = animate(SLIDE_TWEEN_MS, easing: :ease_out_quad) do |progress|
-        @highlight_x = from_x + (target_x - from_x) * progress
-        @highlight_w = from_w + (target_w - from_w) * progress
+      # notify is what makes this a user selection (see #on_press), which
+      # always animates; animate_set? only governs the programmatic side.
+      if notify || animate_set?
+        @highlight_tween = animate(SLIDE_TWEEN_MS, easing: :ease_out_quad) do |progress|
+          @highlight_x = from_x + (target_x - from_x) * progress
+          @highlight_w = from_w + (target_w - from_w) * progress
+          redraw
+        end
+      else
+        @highlight_tween = nil
+        @highlight_x = target_x
+        @highlight_w = target_w
         redraw
       end
 

@@ -79,6 +79,49 @@ describe Tryst::SegmentedControl do
     control.destroy
   end
 
+  # animate_set: only governs the programmatic side. Checked through
+  # @highlight_x rather than a screenshot because the difference IS the
+  # timing: an animated set leaves the highlight where it was for the
+  # tween's first frame to move, an instant one is already there.
+  it "animate_set: false makes #selected= jump instead of sliding" do
+    animated = Tryst::SegmentedControl.new(TK_APP, options: ["A", "B", "C"], selected: "A")
+    animated.pack
+    TK_APP.update
+
+    resting = animated.@highlight_x
+    animated.selected = "C"
+    animated.@highlight_x.should eq resting
+    animated.@highlight_tween.should_not be_nil
+    animated.destroy
+
+    instant = Tryst::SegmentedControl.new(TK_APP, options: ["A", "B", "C"], selected: "A",
+      animate_set: false)
+    instant.pack
+    TK_APP.update
+
+    instant.selected = "C"
+    instant.@highlight_x.should be > resting
+    instant.@highlight_tween.should be_nil
+    instant.destroy
+  end
+
+  it "animate_set: false still animates a user selection" do
+    control = Tryst::SegmentedControl.new(TK_APP, options: ["A", "B", "C"], selected: "A",
+      animate_set: false)
+    control.pack
+    TK_APP.update
+
+    changes = [] of String
+    control.on_action { |v| changes << v }
+
+    TK_APP.interp.simulate_event(control.path, "<Right>")
+    TK_APP.interp.wait_until { !changes.empty? }
+    control.selected.should eq "B"
+    control.@highlight_tween.should_not be_nil
+
+    control.destroy
+  end
+
   it "#disable_segment/#enable_segment track per-segment state and skip Left/Right over a disabled one" do
     control = Tryst::SegmentedControl.new(TK_APP, options: ["A", "B", "C"], selected: "A")
     control.pack
