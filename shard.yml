@@ -17,8 +17,10 @@ description: |
 dependencies:
   tryst:
     github: jamescook/tryst
+    version: "~> 0.1"
   tryst-vector:
     github: jamescook/tryst-vector
+    version: "~> 0.1"
 
 development_dependencies:
   ameba:
